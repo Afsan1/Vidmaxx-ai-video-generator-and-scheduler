@@ -2,8 +2,11 @@
 
 import { motion } from "framer-motion";
 import { Sparkles, ArrowRight } from "lucide-react";
+import { SignInButton, useAuth } from "@clerk/nextjs";
+import Link from "next/link";
 
 export function HeroSection() {
+  const { isSignedIn, isLoaded } = useAuth();
   return (
     <section className="relative overflow-hidden bg-[#0A0014] pt-32 pb-24 md:pt-48 md:pb-32 flex flex-col items-center justify-center min-h-[90vh]">
       {/* Intense dark background with subtle radial glow matching the image */}
@@ -56,12 +59,20 @@ export function HeroSection() {
           transition={{ duration: 0.6, delay: 0.3 }}
           className="mt-10 mb-20 flex flex-col sm:flex-row items-center justify-center gap-4 w-full px-8 sm:px-0"
         >
-          <a
-            href="#"
-            className="flex w-full sm:w-auto items-center justify-center gap-2 rounded-md bg-white px-6 py-3.5 text-sm font-semibold text-black shadow-sm hover:bg-zinc-200 transition-all font-sans"
-          >
-            Start Creating for Free <ArrowRight className="h-4 w-4" />
-          </a>
+          {isLoaded && isSignedIn ? (
+            <Link
+              href="/dashboard"
+              className="flex w-full sm:w-auto items-center justify-center gap-2 rounded-md bg-white px-6 py-3.5 text-sm font-semibold text-black shadow-sm hover:bg-zinc-200 transition-all font-sans"
+            >
+              Go to Dashboard <ArrowRight className="h-4 w-4" />
+            </Link>
+          ) : (
+            <SignInButton mode="modal" forceRedirectUrl="/dashboard">
+              <button className="flex w-full sm:w-auto items-center justify-center gap-2 rounded-md bg-white px-6 py-3.5 text-sm font-semibold text-black shadow-sm hover:bg-zinc-200 transition-all font-sans">
+                Start Creating for Free <ArrowRight className="h-4 w-4" />
+              </button>
+            </SignInButton>
+          )}
           <a
             href="#"
             className="flex w-full sm:w-auto items-center justify-center rounded-md bg-white/5 border border-white/10 px-6 py-3.5 text-sm font-semibold text-white hover:bg-white/10 transition-all"

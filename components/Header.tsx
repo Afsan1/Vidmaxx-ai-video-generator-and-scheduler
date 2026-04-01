@@ -2,8 +2,20 @@
 
 import { Video } from "lucide-react";
 import Link from "next/link";
+import { SignInButton, SignUpButton, UserButton, useAuth } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 
 export function Header() {
+  const { isSignedIn, isLoaded } = useAuth();
+  const router = useRouter();
+
+  const handleDashboardClick = (e: React.MouseEvent) => {
+     if (isSignedIn) {
+       e.preventDefault();
+       router.push("/dashboard");
+     }
+  };
+
   return (
     <header className="absolute inset-x-0 top-0 z-50">
       <nav aria-label="Global" className="flex items-center justify-between p-6 lg:px-8 max-w-7xl mx-auto">
@@ -17,6 +29,7 @@ export function Header() {
           </Link>
         </div>
         
+        {/* Navigation Links - Always visible on larger screens */}
         <div className="hidden lg:flex lg:gap-x-12">
           <Link href="#" className="text-sm font-medium leading-6 text-zinc-400 hover:text-white transition-colors">
             Features
@@ -27,18 +40,40 @@ export function Header() {
           <Link href="#" className="text-sm font-medium leading-6 text-zinc-400 hover:text-white transition-colors">
             About
           </Link>
+          
+          {/* Dashboard link always visible, logic applies */}
+          {isLoaded && (
+            isSignedIn ? (
+              <Link href="/dashboard" className="text-sm font-medium leading-6 text-zinc-400 hover:text-white transition-colors">
+                Dashboard
+              </Link>
+            ) : (
+              <SignInButton mode="modal" forceRedirectUrl="/dashboard">
+                <button className="text-sm font-medium leading-6 text-zinc-400 hover:text-white transition-colors">
+                  Dashboard
+                </button>
+              </SignInButton>
+            )
+          )}
         </div>
 
-        <div className="hidden lg:flex lg:flex-1 lg:justify-end lg:items-center lg:gap-x-6">
-          <Link href="#" className="text-sm font-medium leading-6 text-zinc-400 hover:text-white transition-colors">
-            Sign In
-          </Link>
-          <Link
-            href="#"
-            className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 transition-all"
-          >
-            Get Started
-          </Link>
+        <div className="flex lg:flex-1 lg:justify-end lg:items-center lg:gap-x-6">
+          {(!isLoaded || !isSignedIn) ? (
+            <div className="flex items-center gap-x-4 md:gap-x-6">
+              <SignInButton mode="modal" forceRedirectUrl="/dashboard">
+                <button className="text-sm font-medium leading-6 text-zinc-400 hover:text-white transition-colors">
+                  Sign In
+                </button>
+              </SignInButton>
+              <SignUpButton mode="modal" forceRedirectUrl="/dashboard">
+                <button className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 transition-all">
+                  Get Started
+                </button>
+              </SignUpButton>
+            </div>
+          ) : (
+            <UserButton />
+          )}
         </div>
       </nav>
     </header>
