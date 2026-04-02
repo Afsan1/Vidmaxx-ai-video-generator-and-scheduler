@@ -47,10 +47,12 @@ export function Sidebar() {
 
       {/* Create New Action */}
       <div className="px-6 mb-8">
-        <button className="w-full flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-4 rounded-xl transition-all shadow-md active:scale-[0.98]">
-          <Plus className="w-5 h-5" />
-          <span className="text-md">Create New Series</span>
-        </button>
+        <Link href="/dashboard/create">
+          <button className="w-full flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-4 rounded-xl transition-all shadow-md active:scale-[0.98]">
+            <Plus className="w-5 h-5" />
+            <span className="text-md">Create New Series</span>
+          </button>
+        </Link>
       </div>
 
       {/* Main Navigation */}
