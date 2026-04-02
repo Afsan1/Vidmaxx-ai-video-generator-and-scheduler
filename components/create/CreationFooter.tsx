@@ -9,6 +9,8 @@ interface CreationFooterProps {
   onContinue: () => void;
   onBack: () => void;
   isContinueDisabled?: boolean;
+  isLoading?: boolean;
+  label?: string;
 }
 
 export function CreationFooter({
@@ -17,7 +19,13 @@ export function CreationFooter({
   onContinue,
   onBack,
   isContinueDisabled = false,
+  isLoading = false,
+  label,
 }: CreationFooterProps) {
+  const isLastStep = currentStep === totalSteps;
+  const continueText = label || (isLastStep ? "Schedule Series" : "Continue");
+  const loadingText = label?.includes("Update") ? "Updating..." : "Scheduling...";
+
   return (
     <div className="flex items-center justify-between pt-8 mt-12 border-t border-zinc-100">
       {/* Back Button - Visible from Step 2 onwards */}
@@ -37,12 +45,21 @@ export function CreationFooter({
       {/* Continue Button */}
       <div className="flex-1 flex justify-end">
         <Button
-          disabled={isContinueDisabled}
+          disabled={isContinueDisabled || isLoading}
           onClick={onContinue}
           className="h-14 px-10 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-lg font-bold shadow-xl shadow-indigo-200 transition-all flex items-center gap-3 active:scale-95 disabled:opacity-50"
         >
-          {currentStep === totalSteps ? "Schedule Series" : "Continue"}
-          <ChevronRight className="w-5 h-5" />
+          {isLoading ? (
+            <>
+              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              {loadingText}
+            </>
+          ) : (
+            <>
+              {continueText}
+              <ChevronRight className="w-5 h-5" />
+            </>
+          )}
         </Button>
       </div>
     </div>
