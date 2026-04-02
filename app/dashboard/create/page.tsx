@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { toast } from "sonner";
 import { Stepper } from "@/components/create/Stepper";
 import { NicheSelection } from "@/components/create/NicheSelection";
 import { LanguageAndVoice } from "@/components/create/LanguageAndVoice";
@@ -11,8 +13,15 @@ import { SeriesDetails } from "@/components/create/SeriesDetails";
 import { CreationFooter } from "@/components/create/CreationFooter";
 import { motion, AnimatePresence } from "framer-motion";
 
-export default function CreateSeriesPage() {
+function CreateSeriesContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const editId = searchParams.get("edit");
+  const isEditing = !!editId;
+
   const [currentStep, setCurrentStep] = useState(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isFetching, setIsFetching] = useState(false);
   const [formData, setFormData] = useState({
     niche: "",
     customNiche: "",
@@ -32,6 +41,76 @@ export default function CreateSeriesPage() {
 
   const updateFormData = (key: string, value: any) => {
     setFormData((prev) => ({ ...prev, [key]: value }));
+  };
+
+  useEffect(() => {
+    const fetchSeries = async () => {
+      if (!editId) return;
+
+      try {
+        setIsFetching(true);
+        const response = await fetch(`/api/create-series?id=${editId}`);
+        if (!response.ok) throw new Error("Failed to fetch series data");
+        
+        const data = await response.json();
+        
+        // Map database snake_case to frontend camelCase
+        setFormData({
+          niche: data.niche,
+          customNiche: data.custom_niche || "",
+          language: data.language,
+          voice: data.voice,
+          selectedMusic: data.selected_music || [],
+          videoStyle: data.video_style,
+          captionStyle: data.caption_style,
+          seriesName: data.series_name,
+          duration: data.duration,
+          platforms: data.platforms || [],
+          publishTime: data.publish_time,
+        });
+      } catch (error) {
+        console.error("Error fetching series:", error);
+        toast.error("Error", {
+          description: "Could not load series data for editing.",
+        });
+      } finally {
+        setIsFetching(false);
+      }
+    };
+
+    fetchSeries();
+  }, [editId]);
+
+  const handleScheduleSeries = async () => {
+    try {
+      setIsSubmitting(true);
+      const response = await fetch("/api/create-series", {
+        method: isEditing ? "PATCH" : "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(isEditing ? { ...formData, id: editId } : formData),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || `Failed to ${isEditing ? 'update' : 'schedule'} series`);
+      }
+
+      toast.success(isEditing ? "Series updated successfully!" : "Series scheduled successfully!", {
+        description: isEditing ? "Your changes have been saved." : "Your videos will start generating soon.",
+      });
+      
+      router.push("/dashboard");
+    } catch (error: any) {
+      console.error("Scheduling error:", error);
+      toast.error("Error", {
+        description: error.message || "Failed to schedule your series. Please try again.",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // Logic to determine if we can continue to the next step
@@ -176,9 +255,11 @@ export default function CreateSeriesPage() {
         <CreationFooter 
           currentStep={currentStep}
           totalSteps={6}
-          onContinue={nextStep}
+          onContinue={currentStep === 6 ? handleScheduleSeries : nextStep}
           onBack={prevStep}
-          isContinueDisabled={!isStepValid()}
+          isContinueDisabled={!isStepValid() || isFetching}
+          isLoading={isSubmitting}
+          label={currentStep === 6 ? (isEditing ? "Update Series" : "Schedule Series") : undefined}
         />
 
         {/* Decorative Background Elements */}
@@ -186,5 +267,17 @@ export default function CreateSeriesPage() {
         <div className="absolute bottom-0 left-0 translate-y-1/2 -translate-x-1/2 w-48 h-48 bg-purple-500/5 blur-[60px] rounded-full pointer-events-none" />
       </div>
     </div>
+  );
+}
+
+export default function CreateSeriesPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600" />
+      </div>
+    }>
+      <CreateSeriesContent />
+    </Suspense>
   );
 }

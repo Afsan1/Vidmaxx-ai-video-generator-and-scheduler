@@ -1,31 +1,40 @@
 import { currentUser } from '@clerk/nextjs/server';
 import { createClient } from '@supabase/supabase-js';
-import { Sparkles, Video, History, BarChart3, Layers } from 'lucide-react';
+import { Sparkles, Video, History, BarChart3, Layers, Plus } from 'lucide-react';
+import { DashboardSeries } from '@/components/dashboard/DashboardSeries';
+import Link from 'next/link';
 
 export default async function DashboardPage() {
   const user = await currentUser();
+  let stats = {
+    activeSeries: 0,
+    totalVideos: 148, // Placeholder
+    aiCredits: 2450, // Placeholder
+  };
 
   if (user) {
-    // Guaranteed sync at any cost: whenever you visit the dashboard, we ensure your record exists
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
-    const { data, error } = await supabase
+    // Guaranteed Sync for user record
+    await supabase
       .from('user')
       .upsert({
         id: user.id,
         email: user.emailAddresses[0].emailAddress,
         name: `${user.firstName || ''} ${user.lastName || ''}`.trim(),
-      })
-      .select();
-
-    if (error) {
-       console.error("Guaranteed Sync Error Details:", error.message, error.details, error.hint);
-    } else {
-       console.log("Guaranteed Sync Success! Data recorded:", data);
-    }
+      });
+      
+    // Count Active Series for the welcome block
+    const { count } = await supabase
+      .from('video_series')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .not('status', 'eq', 'paused');
+      
+    if (count !== null) stats.activeSeries = count;
   }
 
   return (
@@ -40,10 +49,13 @@ export default async function DashboardPage() {
             Ready to generate your next viral hit? Use your AI credits to create high-quality series and videos in seconds.
           </p>
           <div className="flex gap-4">
-            <button className="bg-white text-indigo-700 px-6 py-2.5 rounded-xl font-bold shadow-lg hover:bg-slate-50 transition-all flex items-center gap-2">
+            <Link 
+              href="/dashboard/create"
+              className="bg-white text-indigo-700 px-6 py-2.5 rounded-xl font-bold shadow-lg hover:bg-slate-50 transition-all flex items-center gap-2"
+            >
               <Sparkles className="w-5 h-5" />
               New Creation
-            </button>
+            </Link>
             <button className="bg-white/10 hover:bg-white/20 text-white border border-white/20 px-6 py-2.5 rounded-xl font-bold backdrop-blur-sm transition-all">
               Watch Tutorials
             </button>
@@ -58,9 +70,9 @@ export default async function DashboardPage() {
       {/* Stats Summary Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {[
-          { label: "Active Series", value: "12", icon: Layers, color: "text-blue-600", bg: "bg-blue-50" },
-          { label: "Total Videos", value: "148", icon: Video, color: "text-indigo-600", bg: "bg-indigo-50" },
-          { label: "AI Credits", value: "2,450", icon: Sparkles, color: "text-purple-600", bg: "bg-purple-50" },
+          { label: "Active Series", value: stats.activeSeries, icon: Layers, color: "text-blue-600", bg: "bg-blue-50" },
+          { label: "Total Videos", value: stats.totalVideos, icon: Video, color: "text-indigo-600", bg: "bg-indigo-50" },
+          { label: "AI Credits", value: stats.aiCredits, icon: Sparkles, color: "text-purple-600", bg: "bg-purple-50" },
         ].map((stat) => (
           <div key={stat.label} className="p-6 rounded-2xl border border-zinc-200 bg-white shadow-sm flex items-center justify-between hover:border-indigo-200 transition-colors group cursor-default">
             <div>
@@ -76,21 +88,7 @@ export default async function DashboardPage() {
 
       {/* Recent Activity Section */}
       <section className="p-8 rounded-2xl border border-zinc-200 bg-white shadow-sm">
-        <div className="flex items-center justify-between mb-8">
-          <h2 className="text-xl font-bold text-zinc-900 flex items-center gap-2">
-            <History className="w-5 h-5 text-indigo-600" />
-            Recent Creations
-          </h2>
-          <button className="text-sm font-semibold text-indigo-600 hover:underline transition-all">View all history</button>
-        </div>
-        
-        <div className="flex flex-col items-center justify-center py-16 px-4 text-center border-2 border-dashed border-zinc-100 rounded-2xl">
-          <div className="w-16 h-16 bg-zinc-50 rounded-full flex items-center justify-center mb-4">
-            <Video className="w-8 h-8 text-zinc-300" />
-          </div>
-          <h4 className="text-lg font-semibold text-zinc-800 mb-2">No videos yet</h4>
-          <p className="text-zinc-500 max-w-sm">Start your first creation to see it appear here. It only takes a few minutes to generate a high-quality video.</p>
-        </div>
+        <DashboardSeries />
       </section>
     </div>
   );
