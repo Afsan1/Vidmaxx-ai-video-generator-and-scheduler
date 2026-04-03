@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { formatDistanceToNow } from "date-fns";
 import { 
@@ -54,8 +56,21 @@ export function SeriesCard({
   onToggleStatus,
   onGenerate 
 }: SeriesCardProps) {
+  const router = useRouter();
+  const [isGenerating, setIsGenerating] = useState(false);
   const styleInfo = videoStyles.find(s => s.id === series.video_style) || videoStyles[0];
   const isPaused = series.status === 'paused';
+
+  const handleGenerateClick = async () => {
+    if (!onGenerate) return;
+    try {
+      setIsGenerating(true);
+      await onGenerate(series.id);
+      router.push("/dashboard/videos");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   return (
     <Card className="group overflow-hidden rounded-[2.5rem] border-zinc-100 bg-white shadow-sm hover:shadow-xl transition-all duration-500 flex flex-col h-full border-2 hover:border-indigo-100">
@@ -137,6 +152,7 @@ export function SeriesCard({
         <div className="pt-2 flex flex-col gap-3 mt-auto">
           <Button 
             variant="outline" 
+            onClick={() => router.push("/dashboard/videos")}
             className="w-full h-12 rounded-2xl border-2 border-zinc-100 hover:border-indigo-100 hover:bg-indigo-50/30 text-zinc-600 hover:text-indigo-600 font-bold gap-2 group/btn transition-all"
           >
             <History className="w-4 h-4 transition-transform group-hover/btn:-rotate-12" />
@@ -145,11 +161,16 @@ export function SeriesCard({
           </Button>
           
           <Button 
-            onClick={() => onGenerate?.(series.id)}
-            className="w-full h-12 rounded-2xl bg-zinc-900 hover:bg-indigo-600 text-white font-black gap-2 shadow-lg shadow-zinc-200 transition-all active:scale-[0.98]"
+            onClick={handleGenerateClick}
+            disabled={isGenerating}
+            className="w-full h-12 rounded-2xl bg-zinc-900 hover:bg-indigo-600 text-white font-black gap-2 shadow-lg shadow-zinc-200 transition-all active:scale-[0.98] disabled:opacity-70"
           >
-            <Sparkles className="w-4 h-4" />
-            Generate Now
+            {isGenerating ? (
+              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            ) : (
+              <Sparkles className="w-4 h-4" />
+            )}
+            {isGenerating ? "Triggering..." : "Generate Now"}
           </Button>
         </div>
       </div>

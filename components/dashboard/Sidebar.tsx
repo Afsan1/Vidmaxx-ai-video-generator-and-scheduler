@@ -3,20 +3,20 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { 
-  Layers, 
-  PlayCircle, 
-  BookOpen, 
-  CreditCard, 
-  Settings, 
-  Plus, 
-  ArrowUpCircle, 
-  UserCircle 
+import {
+  Layers,
+  PlayCircle,
+  BookOpen,
+  CreditCard,
+  Settings,
+  Plus,
+  ArrowUpCircle,
+  UserCircle
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const menuItems = [
-  { name: "Series", icon: Layers, href: "/dashboard/series" },
+  { name: "Series", icon: Layers, href: "/dashboard" },
   { name: "Videos", icon: PlayCircle, href: "/dashboard/videos" },
   { name: "Guides", icon: BookOpen, href: "/dashboard/guides" },
   { name: "Billing", icon: CreditCard, href: "/dashboard/billing" },
@@ -35,11 +35,11 @@ export function Sidebar() {
     <aside className="w-72 h-screen bg-white border-r border-zinc-200 flex flex-col fixed left-0 top-0 z-40">
       {/* Sidebar Header */}
       <div className="p-6 flex items-center gap-3">
-        <Image 
-          src="/logo.png" 
-          alt="VidMaxx Logo" 
-          width={40} 
-          height={40} 
+        <Image
+          src="/logo.png"
+          alt="VidMaxx Logo"
+          width={40}
+          height={40}
           className="rounded-lg shadow-sm"
         />
         <span className="text-2xl font-bold tracking-tight text-zinc-900">vidmaxx</span>
@@ -63,13 +63,13 @@ export function Sidebar() {
             href={item.href}
             className={cn(
               "flex items-center gap-4 px-4 py-3.5 rounded-xl transition-all group",
-              pathname === item.href 
-                ? "bg-indigo-50 text-indigo-700" 
+              pathname === item.href
+                ? "bg-indigo-50 text-indigo-700"
                 : "text-zinc-500 hover:bg-zinc-50 hover:text-zinc-900"
             )}
           >
             <item.icon className={cn(
-              "w-6 h-6", 
+              "w-6 h-6",
               pathname === item.href ? "text-indigo-600" : "text-zinc-400 group-hover:text-zinc-900"
             )} />
             <span className="text-lg font-medium">{item.name}</span>

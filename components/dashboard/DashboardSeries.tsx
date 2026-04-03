@@ -53,6 +53,29 @@ export function DashboardSeries() {
     toast.success(`Series ${newStatus === 'active' ? 'resumed' : 'paused'}`);
   };
 
+  const handleGenerate = async (id: string) => {
+    try {
+      const response = await fetch("/api/generate-video", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ seriesId: id }),
+      });
+
+      if (!response.ok) throw new Error("Failed to trigger generation");
+      
+      toast.success("Generation started!", {
+        description: "Check the Inngest Dev Server to monitor progress.",
+      });
+    } catch (error) {
+      console.error("Generation error:", error);
+      toast.error("Error", {
+        description: "Failed to start video generation. Please try again.",
+      });
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
@@ -102,6 +125,7 @@ export function DashboardSeries() {
             onEdit={handleEdit}
             onDelete={handleDelete}
             onToggleStatus={handleToggleStatus}
+            onGenerate={handleGenerate}
           />
         ))}
       </div>
